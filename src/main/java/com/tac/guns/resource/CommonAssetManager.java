@@ -1,7 +1,8 @@
 package com.tac.guns.resource;
 
 import com.google.common.collect.Maps;
-import com.tac.guns.resource.pojo.data.GunData;
+import com.tac.guns.resource.pojo.ammo.BulletData;
+import com.tac.guns.resource.pojo.gun.GunData;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.Map;
@@ -20,6 +21,16 @@ public enum CommonAssetManager {
 
     public GunData getGunData(ResourceLocation registryName) {
         return gunData.get(registryName);
+    }
+
+    private final Map<ResourceLocation, BulletData> bulletData = Maps.newHashMap();
+
+    public void putBulletData(ResourceLocation registryName, BulletData data) {
+        bulletData.put(registryName, data);
+    }
+
+    public BulletData getBulletData(ResourceLocation registryName) {
+        return bulletData.get(registryName);
     }
 
     public void clearAll() {

@@ -16,7 +16,7 @@ import com.tac.guns.client.resource.pojo.model.BedrockVersion;
 import com.tac.guns.item.nbt.GunItemData;
 import com.tac.guns.resource.CommonAssetManager;
 import com.tac.guns.resource.pojo.GunIndexPOJO;
-import com.tac.guns.resource.pojo.data.GunData;
+import com.tac.guns.resource.pojo.gun.GunData;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;

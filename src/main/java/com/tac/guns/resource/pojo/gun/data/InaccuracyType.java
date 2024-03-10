@@ -1,4 +1,4 @@
-package com.tac.guns.resource.pojo.data;
+package com.tac.guns.resource.pojo.gun.data;
 
 import com.google.gson.annotations.SerializedName;
 import com.tac.guns.api.entity.IGunOperator;

@@ -3,6 +3,7 @@ package com.tac.guns.resource.loader;
 import com.tac.guns.GunMod;
 import com.tac.guns.resource.CommonAssetManager;
 import com.tac.guns.resource.CommonGunPackLoader;
+import com.tac.guns.resource.pojo.ammo.BulletData;
 import com.tac.guns.resource.pojo.gun.GunData;
 import com.tac.guns.util.TacPathVisitor;
 import net.minecraft.resources.ResourceLocation;
@@ -21,9 +22,9 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-public final class GunDataLoader {
-    private static final Marker MARKER = MarkerManager.getMarker("GunDataLoader");
-    private static final Pattern DATA_PATTERN = Pattern.compile("^(\\w+)/guns/data/([\\w/]+)\\.json$");
+public final class AmmoDataLoader {
+    private static final Marker MARKER = MarkerManager.getMarker("BulletDataLoader");
+    private static final Pattern DATA_PATTERN = Pattern.compile("^(\\w+)/ammo/data/([\\w/]+)\\.json$");
 
     public static boolean load(ZipFile zipFile, String zipPath) throws IOException {
         Matcher matcher = DATA_PATTERN.matcher(zipPath);
@@ -37,8 +38,8 @@ public final class GunDataLoader {
             }
             try (InputStream stream = zipFile.getInputStream(entry)) {
                 ResourceLocation registryName = new ResourceLocation(namespace, path);
-                GunData data = CommonGunPackLoader.GSON.fromJson(new InputStreamReader(stream, StandardCharsets.UTF_8), GunData.class);
-                CommonAssetManager.INSTANCE.putGunData(registryName, data);
+                BulletData data = CommonGunPackLoader.GSON.fromJson(new InputStreamReader(stream, StandardCharsets.UTF_8), BulletData.class);
+                CommonAssetManager.INSTANCE.putBulletData(registryName, data);
                 return true;
             }
         }
@@ -46,12 +47,12 @@ public final class GunDataLoader {
     }
 
     public static void load(File root) throws IOException {
-        Path filePath = root.toPath().resolve("guns/data");
+        Path filePath = root.toPath().resolve("ammo/data");
         if (Files.isDirectory(filePath)) {
             TacPathVisitor visitor = new TacPathVisitor(filePath.toFile(), root.getName(), ".json", (id, file) -> {
                 try (InputStream stream = Files.newInputStream(file)) {
-                    GunData data = CommonGunPackLoader.GSON.fromJson(new InputStreamReader(stream, StandardCharsets.UTF_8), GunData.class);
-                    CommonAssetManager.INSTANCE.putGunData(id, data);
+                    BulletData data = CommonGunPackLoader.GSON.fromJson(new InputStreamReader(stream, StandardCharsets.UTF_8), BulletData.class);
+                    CommonAssetManager.INSTANCE.putBulletData(id, data);
                 } catch (IOException exception) {
                     GunMod.LOGGER.warn(MARKER, "Failed to read data file: {}", file);
                     exception.printStackTrace();

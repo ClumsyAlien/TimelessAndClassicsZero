@@ -1,7 +1,8 @@
-package com.tac.guns.resource.pojo.data;
+package com.tac.guns.resource.pojo.gun;
 
 import com.google.gson.annotations.SerializedName;
 import com.tac.guns.api.gun.FireMode;
+import com.tac.guns.resource.pojo.gun.data.*;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.Collections;
