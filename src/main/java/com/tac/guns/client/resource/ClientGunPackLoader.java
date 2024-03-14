@@ -15,6 +15,8 @@ import com.tac.guns.client.resource.serialize.Vector3fSerializer;
 import com.tac.guns.resource.pojo.AmmoIndexPOJO;
 import com.tac.guns.resource.pojo.AttachmentIndexPOJO;
 import com.tac.guns.resource.pojo.GunIndexPOJO;
+import com.tac.guns.resource.pojo.data.ammo.BulletVariationWrapper;
+import com.tac.guns.resource.serialize.BulletVariationWrapperSerializer;
 import com.tac.guns.util.GetJarResources;
 import com.tac.guns.util.TacPathVisitor;
 import net.minecraft.resources.ResourceLocation;
@@ -46,6 +48,7 @@ public class ClientGunPackLoader {
             .registerTypeAdapter(CubesItem.class, new CubesItem.Deserializer())
             .registerTypeAdapter(Vector3f.class, new Vector3fSerializer())
             .registerTypeAdapter(CommonTransformObject.class, new CommonTransformObject.Serializer())
+            .registerTypeAdapter(BulletVariationWrapper.class, new BulletVariationWrapperSerializer())
             .create();
 
     private static final Marker MARKER = MarkerManager.getMarker("ClientGunPackLoader");

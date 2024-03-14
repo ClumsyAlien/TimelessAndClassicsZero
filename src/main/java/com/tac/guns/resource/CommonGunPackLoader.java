@@ -15,6 +15,8 @@ import com.tac.guns.resource.loader.RecipeLoader;
 import com.tac.guns.resource.pojo.AmmoIndexPOJO;
 import com.tac.guns.resource.pojo.AttachmentIndexPOJO;
 import com.tac.guns.resource.pojo.GunIndexPOJO;
+import com.tac.guns.resource.pojo.data.ammo.BulletVariationWrapper;
+import com.tac.guns.resource.serialize.BulletVariationWrapperSerializer;
 import com.tac.guns.resource.serialize.PairSerializer;
 import com.tac.guns.util.GetJarResources;
 import com.tac.guns.util.TacPathVisitor;
@@ -45,7 +47,7 @@ public class CommonGunPackLoader {
             .registerTypeAdapter(Pair.class, new PairSerializer())
             .registerTypeAdapter(GunSmithTableIngredient.class, new GunSmithTableIngredient.Serializer())
             .registerTypeAdapter(GunSmithTableResult.class, new GunSmithTableResult.Serializer())
-            .create();
+            .registerTypeAdapter(BulletVariationWrapper.class, new BulletVariationWrapperSerializer()).create();
     /**
      * 放置自定义枪械模型的目录
      */
