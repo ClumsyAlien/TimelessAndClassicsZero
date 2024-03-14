@@ -6,6 +6,8 @@ import com.tac.guns.client.resource.pojo.display.ammo.AmmoDisplay;
 import com.tac.guns.client.resource.pojo.model.BedrockModelPOJO;
 import com.tac.guns.client.resource.pojo.model.BedrockVersion;
 import com.tac.guns.resource.pojo.AmmoIndexPOJO;
+import com.tac.guns.resource.pojo.data.ammo.BulletVariation;
+import com.tac.guns.resource.pojo.data.ammo.BulletVariationWrapper;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
@@ -15,6 +17,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 
 public class ClientAmmoIndex {
+
+    //TODO: Cache all bulletTypes in map based on type. Also fill in any missing fields
     private String name;
     private BedrockAmmoModel ammoModel;
     private RenderType slotRenderType;
@@ -42,7 +46,9 @@ public class ClientAmmoIndex {
 
     @NotNull
     private static AmmoDisplay checkDisplay(AmmoIndexPOJO ammoIndexPOJO) {
-        ResourceLocation pojoDisplay = ammoIndexPOJO.getDisplay();
+        if(ammoIndexPOJO.getBulletVariations().isEmpty())
+            throw new IllegalArgumentException(ammoIndexPOJO.getName() + " requires at least a single element within BulletVariations");
+        ResourceLocation pojoDisplay = ammoIndexPOJO.getBulletVariations().get(0).getDisplay();
         if (pojoDisplay == null) {
             throw new IllegalArgumentException("index object missing display field");
         }
@@ -51,6 +57,30 @@ public class ClientAmmoIndex {
             throw new IllegalArgumentException("there is no corresponding display file");
         }
         return display;
+    }
+
+
+    /**
+     * @return Returns display associated with provided bullet type
+     * @throws IllegalArgumentException if bulletType is not found in ammoIndex
+     */
+    @NotNull
+    private static AmmoDisplay checkDisplay(AmmoIndexPOJO ammoIndexPOJO, BulletVariation bulletType) {
+        for(BulletVariationWrapper wrapper : ammoIndexPOJO.getBulletVariations()) {
+            if(wrapper.getBulletVariation() != bulletType)
+                continue;
+            ResourceLocation pojoDisplay = wrapper.getDisplay();
+            if (pojoDisplay == null) {
+                throw new IllegalArgumentException("index object missing display field");
+            }
+            AmmoDisplay display = ClientAssetManager.INSTANCE.getAmmoDisplay(pojoDisplay);
+            if (display == null) {
+                throw new IllegalArgumentException("there is no corresponding display file");
+            }
+            return display;
+        }
+        //TODO: Add logic if custom type provided
+        throw new IllegalArgumentException("Custom bullet type is NOT SUPPORTED");
     }
 
     private static void checkTextureAndModel(AmmoDisplay display, ClientAmmoIndex index) {

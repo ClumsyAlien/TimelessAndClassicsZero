@@ -9,6 +9,8 @@ import com.tac.guns.resource.index.CommonGunIndex;
 import com.tac.guns.resource.loader.GunDataLoader;
 import com.tac.guns.resource.pojo.AmmoIndexPOJO;
 import com.tac.guns.resource.pojo.GunIndexPOJO;
+import com.tac.guns.resource.pojo.data.ammo.BulletVariationWrapper;
+import com.tac.guns.resource.serialize.BulletVariationWrapperSerializer;
 import com.tac.guns.resource.serialize.PairSerializer;
 import com.tac.guns.util.GetJarResources;
 import com.tac.guns.util.TacPathVisitor;
@@ -35,7 +37,9 @@ import java.util.zip.ZipFile;
 
 public class CommonGunPackLoader {
     public static final Gson GSON = new GsonBuilder().registerTypeAdapter(ResourceLocation.class, new ResourceLocation.Serializer())
-            .registerTypeAdapter(Pair.class, new PairSerializer()).create();
+            .registerTypeAdapter(Pair.class, new PairSerializer())
+            .registerTypeAdapter(BulletVariationWrapper.class, new BulletVariationWrapperSerializer()).create();
+
     /**
      * 放置自定义枪械模型的目录
      */

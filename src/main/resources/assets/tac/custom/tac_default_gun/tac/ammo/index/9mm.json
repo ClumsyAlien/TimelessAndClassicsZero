@@ -1,6 +1,19 @@
 {
   "name": "tac.ammo.9mm.name",
-  "display": "tac:9mm_display",
-  "stack_size": 60
+  "stack_size": 60,
+  "bullet_variations": [
+    {
+      "suffix": "standard",
+      "display": "tac:9mm_display",
+      "bullet_variation": "standard",
+      "damage_type": "standard"
+    },
+    {
+      "suffix": "hp",
+      "display": "tac:9mm_display",
+      "bullet_variation": "hp",
+      "damage_type": "standard"
+    }
+  ]
 }
     
