@@ -17,6 +17,8 @@ import com.tac.guns.resource.pojo.AttachmentIndexPOJO;
 import com.tac.guns.resource.pojo.GunIndexPOJO;
 import com.tac.guns.resource.pojo.data.ammo.BulletVariationWrapper;
 import com.tac.guns.resource.serialize.BulletVariationWrapperSerializer;
+import com.tac.guns.resource.pojo.data.ammo.BulletVariationWrapper;
+import com.tac.guns.resource.serialize.BulletVariationWrapperSerializer;
 import com.tac.guns.resource.serialize.PairSerializer;
 import com.tac.guns.util.GetJarResources;
 import com.tac.guns.util.TacPathVisitor;
