@@ -1,6 +1,13 @@
 {
   "name": "tac.ammo.12g.name",
-  "display": "tac:12g_display",
-  "stack_size": 60
+  "stack_size": 60,
+  "bullet_variations": [
+    {
+      "suffix": "standard",
+      "display": "tac:12g_display",
+      "bullet_variation": "standard",
+      "damage_type": "standard"
+    }
+  ]
 }
     

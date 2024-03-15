@@ -1,6 +1,13 @@
 {
   "name": "tac.ammo.762x39.name",
-  "display": "tac:762x39_display",
   // 堆叠数量
-  "stack_size": 60
+  "stack_size": 60,
+  "bullet_variations": [
+    {
+      "suffix": "standard",
+      "display": "tac:762x39_display",
+      "bullet_variation": "standard",
+      "damage_type": "standard"
+    }
+  ]
 }

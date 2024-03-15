@@ -1,6 +1,13 @@
 {
   "name": "tac.ammo.46x30.name",
-  "display": "tac:46x30_display",
-  "stack_size": 60
+  "stack_size": 60,
+  "bullet_variations": [
+    {
+      "suffix": "standard",
+      "display": "tac:46x30_display",
+      "bullet_variation": "standard",
+      "damage_type": "standard"
+    }
+  ]
 }
     
