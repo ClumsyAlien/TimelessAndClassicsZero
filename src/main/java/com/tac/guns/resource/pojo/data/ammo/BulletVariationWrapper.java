@@ -8,22 +8,18 @@ public class BulletVariationWrapper {
     private String suffix;
     @SerializedName("display")
     private ResourceLocation display;
-    @SerializedName("bullet_variation")
-    private BulletVariation bulletVariation;
     @SerializedName("damage_type")
     private BulletDamageType damageType;
 
     // Constructor used to create custom bullets using custom BulletVariation
     public BulletVariationWrapper() {
-        this.suffix = "standard";
+        this.suffix = "";
         this.display = null;
-        this.bulletVariation = BulletVariation.STANDARD;
         this.damageType = BulletDamageType.STANDARD;
     }
-    public BulletVariationWrapper(String suffix, ResourceLocation display, BulletVariation bulletVariation, BulletDamageType damageType) {
+    public BulletVariationWrapper(String suffix, ResourceLocation display, BulletDamageType damageType) {
         this.suffix = suffix;
         this.display = display;
-        this.bulletVariation = bulletVariation;
         this.damageType = damageType;
     }
     public String getSuffix() {
@@ -31,9 +27,6 @@ public class BulletVariationWrapper {
     }
     public ResourceLocation getDisplay() {
         return display;
-    }
-    public BulletVariation getBulletVariation() {
-        return bulletVariation;
     }
     public BulletDamageType getDamageType() {
         return damageType;

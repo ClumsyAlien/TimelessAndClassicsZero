@@ -1,11 +1,9 @@
 {
   "name": "tac.ammo.58x42.name",
   "stack_size": 60,
-  "bullet_variations": [
+  "bullet": [
     {
-      "suffix": "standard",
       "display": "tac:58x42_display",
-      "bullet_variation": "standard",
       "damage_type": "standard"
     }
   ]

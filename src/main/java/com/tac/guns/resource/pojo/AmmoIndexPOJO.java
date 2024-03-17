@@ -14,7 +14,7 @@ public class AmmoIndexPOJO {
     private String name;
     @SerializedName("stack_size")
     private int stackSize;
-    @SerializedName("bullet_variations")
+    @SerializedName("bullet")
     private List<BulletVariationWrapper> bulletVariations;
 
     public List<BulletVariationWrapper> getBulletVariations() {return bulletVariations;}

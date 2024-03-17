@@ -61,7 +61,7 @@ public class ClientGunPackLoader {
      * 储存修改过的客户端 index
      */
     private static final Map<ResourceLocation, ClientGunIndex> GUN_INDEX = Maps.newHashMap();
-    private static final Map<ResourceLocation, Pair<ClientAmmoIndex, BulletVariation>> AMMO_INDEX = Maps.newHashMap();
+    private static final Map<ResourceLocation, Pair<ClientAmmoIndex, String>> AMMO_INDEX = Maps.newHashMap();
     private static final Map<ResourceLocation, ClientAttachmentIndex> ATTACHMENT_INDEX = Maps.newHashMap();
 
     /**
@@ -102,7 +102,7 @@ public class ClientGunPackLoader {
         return GUN_INDEX.entrySet();
     }
 
-    public static Set<Map.Entry<ResourceLocation, Pair<ClientAmmoIndex, BulletVariation>>> getAllAmmo() {
+    public static Set<Map.Entry<ResourceLocation, Pair<ClientAmmoIndex, String>>> getAllAmmo() {
         return AMMO_INDEX.entrySet();
     }
 
@@ -114,7 +114,7 @@ public class ClientGunPackLoader {
         return Optional.ofNullable(GUN_INDEX.get(registryName));
     }
 
-    public static Optional<Pair<ClientAmmoIndex, BulletVariation>> getAmmoIndex(ResourceLocation registryName) {
+    public static Optional<Pair<ClientAmmoIndex, String>> getAmmoIndex(ResourceLocation registryName) {
         return Optional.ofNullable(AMMO_INDEX.get(registryName));
     }
 
@@ -327,8 +327,8 @@ public class ClientGunPackLoader {
                 try {
                     for(var x : indexPOJO.getBulletVariations())
                     {
-                        ResourceLocation registryName = new ResourceLocation(namespace, id+"_"+x.getSuffix());
-                        AMMO_INDEX.put(registryName, Pair.of(ClientAmmoIndex.getInstance(indexPOJO), x.getBulletVariation()));
+                        ResourceLocation registryName = new ResourceLocation(namespace, ClientAmmoIndex.buildWithSuffixOrDefault(id, x.getSuffix()));
+                        AMMO_INDEX.put(registryName, Pair.of(ClientAmmoIndex.getInstance(indexPOJO), ClientAmmoIndex.buildWithSuffixOrDefault(indexPOJO.getName(), x.getSuffix())));
                     }
                 } catch (IllegalArgumentException exception) {
                     GunMod.LOGGER.warn("{} index file read fail!", path);
@@ -348,8 +348,8 @@ public class ClientGunPackLoader {
 
                     for(var x : indexPOJO.getBulletVariations())
                     {
-                        ResourceLocation registryName = new ResourceLocation(id.toString()+"_"+x.getSuffix());
-                        AMMO_INDEX.put(registryName, Pair.of(ClientAmmoIndex.getInstance(indexPOJO), x.getBulletVariation()));
+                        ResourceLocation registryName = new ResourceLocation(ClientAmmoIndex.buildWithSuffixOrDefault(id.toString(), x.getSuffix()));
+                        AMMO_INDEX.put(registryName, Pair.of(ClientAmmoIndex.getInstance(indexPOJO), ClientAmmoIndex.buildWithSuffixOrDefault(indexPOJO.getName(), x.getSuffix())));
                     }
 
                     //AMMO_INDEX.put(id, ClientAmmoIndex.getInstance(indexPOJO));

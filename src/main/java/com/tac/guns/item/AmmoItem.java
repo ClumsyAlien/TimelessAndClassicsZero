@@ -46,10 +46,9 @@ public class AmmoItem extends Item implements AmmoItemDataAccessor {
     @OnlyIn(Dist.CLIENT)
     public Component getName(@Nonnull ItemStack stack) {
         ResourceLocation ammoId = this.getAmmoId(stack);
-        Optional<Pair<ClientAmmoIndex, BulletVariation>> ammoIndex = TimelessAPI.getClientAmmoIndex(ammoId);
+        Optional<Pair<ClientAmmoIndex, String>> ammoIndex = TimelessAPI.getClientAmmoIndex(ammoId);
         if (ammoIndex.isPresent() && ammoIndex.get().getRight() != null) {
-            var x = ammoIndex.get().getLeft().buildNameFromVariation(ammoIndex.get().getRight());
-            return new TranslatableComponent(x);
+            return new TranslatableComponent(ammoIndex.get().getRight());
         }
         return super.getName(stack);
     }

@@ -1,11 +1,9 @@
 {
   "name": "tac.ammo.45acp.name",
   "stack_size": 60,
-  "bullet_variations": [
+  "bullet": [
     {
-      "suffix": "standard",
       "display": "tac:45acp_display",
-      "bullet_variation": "standard",
       "damage_type": "standard"
     }
   ]

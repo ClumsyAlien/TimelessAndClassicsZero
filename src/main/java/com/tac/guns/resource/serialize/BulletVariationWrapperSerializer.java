@@ -15,21 +15,23 @@ public class BulletVariationWrapperSerializer implements JsonDeserializer<Bullet
     public BulletVariationWrapper deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject jsonObject = json.getAsJsonObject();
 
-        String suffix = jsonObject.get("suffix").getAsString();
+        // Default case, we don't care to have custom ammunition, bullets only have 1 definition
+        String suffix = "";
+        try {
+            JsonElement suffixElement = jsonObject.get("suffix");
+            suffix = suffixElement.getAsString();
+        } catch(NullPointerException ignored) {}
+
         ResourceLocation display = context.deserialize(jsonObject.get("display"), ResourceLocation.class);
 
-        BulletVariation bulletVariation;
-        try {
-            JsonElement bulletVariationElement = jsonObject.get("bullet_variation");
-            bulletVariation = BulletVariation.valueOf(bulletVariationElement.getAsString().toUpperCase());
-        } catch (IllegalArgumentException | NullPointerException e) {
-            bulletVariation = BulletVariation.CUSTOM; // TODO: Use "name" as identifier and suffix for custom model if display is not included.
-        }
-
+        BulletDamageType bulletDamageType = BulletDamageType.STANDARD;
         JsonElement bulletDamageTypeElement = jsonObject.get("damage_type");
-        BulletDamageType bulletDamageType = BulletDamageType.valueOf(bulletDamageTypeElement.getAsString().toUpperCase());
+        try {
+            bulletDamageType = BulletDamageType.valueOf(bulletDamageTypeElement.getAsString().toUpperCase());
+        } catch(NullPointerException ignored) {}
 
-        return new BulletVariationWrapper(suffix, display, bulletVariation, bulletDamageType);
+
+        return new BulletVariationWrapper(suffix, display,  bulletDamageType);
     }
 
     // Added just in case serialize is overwritten for this type due to custom handler
@@ -40,9 +42,6 @@ public class BulletVariationWrapperSerializer implements JsonDeserializer<Bullet
 
         JsonElement displayJson = context.serialize(src.getDisplay());
         jsonObject.add("display", displayJson);
-
-        JsonElement bulletVariationJson = context.serialize(src.getBulletVariation());
-        jsonObject.add("bullet_variation", bulletVariationJson);
 
         JsonElement bulletDamageTypeJson = context.serialize(src.getDamageType());
         jsonObject.add("damage_type", bulletDamageTypeJson);

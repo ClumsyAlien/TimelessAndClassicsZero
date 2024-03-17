@@ -1,11 +1,9 @@
 {
   "name": "tac.ammo.50bmg.name",
   "stack_size": 60,
-  "bullet_variations": [
+  "bullet": [
     {
-      "suffix": "standard",
       "display": "tac:50bmg_display",
-      "bullet_variation": "standard",
       "damage_type": "standard"
     }
   ]

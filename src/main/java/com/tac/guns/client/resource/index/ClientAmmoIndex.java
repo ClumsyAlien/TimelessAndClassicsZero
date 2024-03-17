@@ -1,7 +1,6 @@
 package com.tac.guns.client.resource.index;
 
 import com.google.common.collect.Maps;
-import com.tac.guns.api.TimelessAPI;
 import com.tac.guns.client.model.BedrockAmmoModel;
 import com.tac.guns.client.resource.ClientAssetManager;
 import com.tac.guns.client.resource.pojo.display.ammo.AmmoDisplay;
@@ -9,9 +8,7 @@ import com.tac.guns.client.resource.pojo.display.ammo.AmmoEntityDisplay;
 import com.tac.guns.client.resource.pojo.model.BedrockModelPOJO;
 import com.tac.guns.client.resource.pojo.model.BedrockVersion;
 import com.tac.guns.resource.pojo.AmmoIndexPOJO;
-import com.tac.guns.resource.pojo.data.ammo.BulletVariation;
 import com.tac.guns.resource.pojo.data.ammo.BulletVariationWrapper;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.StringUtils;
@@ -35,24 +32,21 @@ public class ClientAmmoIndex {
 
     private int stackSize;
 
-    // Map of <BulletType, ItemId.name>
-    private Map<String, BulletVariation> variationNames;
-    private Map<BulletVariation, String> suffixPerVariation;
-    private Map<Pair<BulletVariation, String>, BulletVariationWrapper> bulletVariations;
-    private Map<BulletVariation, Pair<BedrockAmmoModel, ResourceLocation>> modelTexturePairs;
+    // Map of name + suffix and wrapper
+    private Map<String, BulletVariationWrapper> bulletVariations;
+    // Map of name and ammo model
+    private Map<String, Pair<BedrockAmmoModel, ResourceLocation>> modelTexturePairs;
     private ClientAmmoIndex() {
     }
 
     public static ClientAmmoIndex getInstance(AmmoIndexPOJO clientPojo) throws IllegalArgumentException {
         ClientAmmoIndex index = new ClientAmmoIndex();
         index.bulletVariations = Maps.newHashMap();
-        index.variationNames = Maps.newHashMap();
         index.modelTexturePairs = Maps.newHashMap();
-        index.suffixPerVariation = Maps.newHashMap();
         checkIndex(clientPojo, index);
         checkName(clientPojo, index);
         cacheAllBulletTypes(clientPojo, index);
-        @NotNull List<Pair<BulletVariation, AmmoDisplay>> displays = checkAllVariationDisplay(clientPojo);
+        @NotNull List<Pair<String, AmmoDisplay>> displays = checkAllDisplay(clientPojo);
         for(var displayPair : displays) {
             checkTextureAndModel(displayPair.getRight(), index, displayPair.getLeft());
             checkSlotTexture(displayPair.getRight(), index, displayPair.getLeft());
@@ -69,10 +63,8 @@ public class ClientAmmoIndex {
         for (var x : ammoIndexPOJO.getBulletVariations()) {
             var name = index.name;
             // Must be built before we can build complete name
-            index.suffixPerVariation.put(x.getBulletVariation(), x.getSuffix());
-            name = index.buildNameFromVariation(x.getBulletVariation());
-            index.bulletVariations.put(Pair.of(x.getBulletVariation(), name), x);
-            index.variationNames.put(name, x.getBulletVariation());
+            name = index.buildWithSuffixOrDefault(x.getSuffix());
+            index.bulletVariations.put(name, x);
         }
 
         index.name = ammoIndexPOJO.getName();
@@ -109,14 +101,9 @@ public class ClientAmmoIndex {
         return display;
     }
 
-
-    /**
-     * @return Returns display associated with provided bullet type
-     * @throws IllegalArgumentException if bulletType is not found in ammoIndex
-     */
     @NotNull
-    private static List<Pair<BulletVariation, AmmoDisplay>> checkAllVariationDisplay(AmmoIndexPOJO ammoIndexPOJO) {
-        var displays = new ArrayList<Pair<BulletVariation, AmmoDisplay>>();
+    private static List<Pair<String, AmmoDisplay>> checkAllDisplay(AmmoIndexPOJO ammoIndexPOJO) {
+        var displays = new ArrayList<Pair<String, AmmoDisplay>>();
         for(BulletVariationWrapper wrapper : ammoIndexPOJO.getBulletVariations()) {
             ResourceLocation pojoDisplay = wrapper.getDisplay();
             if (pojoDisplay == null) {
@@ -126,11 +113,11 @@ public class ClientAmmoIndex {
             if (display == null) {
                 throw new IllegalArgumentException("there is no corresponding display file");
             }
-            displays.add(Pair.of(wrapper.getBulletVariation(), display));
+            displays.add(Pair.of(ClientAmmoIndex.buildWithSuffixOrDefault(ammoIndexPOJO.getName(), wrapper.getSuffix()), display));
         }
         return displays;
     }
-    private static void checkTextureAndModel(AmmoDisplay display, ClientAmmoIndex index, BulletVariation variation) {
+    private static void checkTextureAndModel(AmmoDisplay display, ClientAmmoIndex index, String name) {
         // 检查模型
         ResourceLocation modelLocation = display.getModelLocation();
         if (modelLocation == null) {
@@ -148,24 +135,24 @@ public class ClientAmmoIndex {
         index.modelTextureLocation = texture;
         // 先判断是不是 1.10.0 版本基岩版模型文件
         if (modelPOJO.getFormatVersion().equals(BedrockVersion.LEGACY.getVersion()) && modelPOJO.getGeometryModelLegacy() != null) {
-            index.modelTexturePairs.put(variation, Pair.of(new BedrockAmmoModel(modelPOJO, BedrockVersion.LEGACY), null));
+            index.modelTexturePairs.put(name, Pair.of(new BedrockAmmoModel(modelPOJO, BedrockVersion.LEGACY), null));
         }
         // 判定是不是 1.12.0 版本基岩版模型文件
         if (modelPOJO.getFormatVersion().equals(BedrockVersion.NEW.getVersion()) && modelPOJO.getGeometryModelNew() != null) {
-            index.modelTexturePairs.put(variation, Pair.of(new BedrockAmmoModel(modelPOJO, BedrockVersion.NEW), null));
+            index.modelTexturePairs.put(name, Pair.of(new BedrockAmmoModel(modelPOJO, BedrockVersion.NEW), null));
         }
-        if (index.modelTexturePairs.get(variation) == null) {
+        if (index.modelTexturePairs.get(name) == null) {
             throw new IllegalArgumentException("there is no model data in the model file");
         }
     }
 
-    private static void checkSlotTexture(AmmoDisplay display, ClientAmmoIndex index, BulletVariation variation) {
+    private static void checkSlotTexture(AmmoDisplay display, ClientAmmoIndex index, String name) {
         // 加载 GUI 内枪械图标
         //index.modelTexturePairs.computeIfAbsent(variation, k -> new MutablePair<>());
         var pair = new MutablePair<BedrockAmmoModel, ResourceLocation>();//index.modelTexturePairs.get(variation);
-        pair.setLeft(index.modelTexturePairs.get(variation).getLeft());
+        pair.setLeft(index.modelTexturePairs.get(name).getLeft());
         pair.setValue(Objects.requireNonNullElseGet(display.getSlotTextureLocation(), MissingTextureAtlasSprite::getLocation));
-        index.modelTexturePairs.put(variation, pair);
+        index.modelTexturePairs.put(name, pair);
     }
 
     private static void checkAmmoEntity(AmmoDisplay display, ClientAmmoIndex index) {
@@ -195,29 +182,27 @@ public class ClientAmmoIndex {
     public String getName() {
         return name;
     }
-
-    public BulletVariation getVariationFromName(String name) {
-        return variationNames.get(name);
+    public BedrockAmmoModel getAmmoModel(String name) {
+        return modelTexturePairs.get(name).getLeft();
     }
 
-    public BedrockAmmoModel getAmmoModel(BulletVariation variation) {
-        return modelTexturePairs.get(variation).getLeft();
+    public ResourceLocation getSlotTextureLocation(String name) {
+        return modelTexturePairs.get(name).getRight();
     }
-
-    public ResourceLocation getSlotTextureLocation(BulletVariation variation) {
-        return modelTexturePairs.get(variation).getRight();
+    private String buildWithSuffixOrDefault(String suffix) {
+        if(suffix == null || suffix.isEmpty())
+            return this.name;
+        else return this.name + "_" + suffix;
     }
-
-    public String getSuffixPerVariation(BulletVariation variation) {
-        return suffixPerVariation.get(variation);
-    }
-
-    public String buildNameFromVariation(BulletVariation variation) {
-        return this.name + "_" + suffixPerVariation.get(variation);
-    }
-
-    public String buildNameFromId(ResourceLocation itemId) {
-        return this.name + "_" + suffixPerVariation.get(TimelessAPI.getClientAmmoIndex(itemId).get().getRight());
+    public static String buildWithSuffixOrDefault(String name, String... suffix) {
+        StringBuilder result = new StringBuilder(name);
+        for(String part : suffix) {
+            if(part == null || part.isEmpty())
+                return result.toString();
+            else
+                result.append("_").append(part);
+        }
+        return result.toString();
     }
     public int getStackSize() {
         return stackSize;

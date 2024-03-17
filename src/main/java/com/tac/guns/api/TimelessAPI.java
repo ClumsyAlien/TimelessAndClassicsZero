@@ -34,7 +34,7 @@ public final class TimelessAPI {
     }
 
     @OnlyIn(Dist.CLIENT)
-    public static Optional<Pair<ClientAmmoIndex, BulletVariation>> getClientAmmoIndex(ResourceLocation ammoId) {
+    public static Optional<Pair<ClientAmmoIndex, String>> getClientAmmoIndex(ResourceLocation ammoId) {
         return ClientGunPackLoader.getAmmoIndex(ammoId);
     }
 
@@ -44,7 +44,7 @@ public final class TimelessAPI {
     }
 
     @OnlyIn(Dist.CLIENT)
-    public static Set<Map.Entry<ResourceLocation, Pair<ClientAmmoIndex, BulletVariation>>> getAllClientAmmoIndex() {
+    public static Set<Map.Entry<ResourceLocation, Pair<ClientAmmoIndex, String>>> getAllClientAmmoIndex() {
         return ClientGunPackLoader.getAllAmmo();
     }
 
