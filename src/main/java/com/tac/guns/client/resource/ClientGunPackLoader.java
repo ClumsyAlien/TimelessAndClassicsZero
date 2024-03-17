@@ -15,6 +15,7 @@ import com.tac.guns.client.resource.serialize.Vector3fSerializer;
 import com.tac.guns.resource.pojo.AmmoIndexPOJO;
 import com.tac.guns.resource.pojo.AttachmentIndexPOJO;
 import com.tac.guns.resource.pojo.GunIndexPOJO;
+import com.tac.guns.resource.pojo.data.ammo.BulletVariation;
 import com.tac.guns.resource.pojo.data.ammo.BulletVariationWrapper;
 import com.tac.guns.resource.serialize.BulletVariationWrapperSerializer;
 import com.tac.guns.util.GetJarResources;
@@ -22,6 +23,7 @@ import com.tac.guns.util.TacPathVisitor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 
@@ -56,7 +58,7 @@ public class ClientGunPackLoader {
      * 储存修改过的客户端 index
      */
     private static final Map<ResourceLocation, ClientGunIndex> GUN_INDEX = Maps.newHashMap();
-    private static final Map<ResourceLocation, ClientAmmoIndex> AMMO_INDEX = Maps.newHashMap();
+    private static final Map<ResourceLocation, Pair<ClientAmmoIndex, BulletVariation>> AMMO_INDEX = Maps.newHashMap();
     private static final Map<ResourceLocation, ClientAttachmentIndex> ATTACHMENT_INDEX = Maps.newHashMap();
 
     /**
@@ -97,7 +99,7 @@ public class ClientGunPackLoader {
         return GUN_INDEX.entrySet();
     }
 
-    public static Set<Map.Entry<ResourceLocation, ClientAmmoIndex>> getAllAmmo() {
+    public static Set<Map.Entry<ResourceLocation, Pair<ClientAmmoIndex, BulletVariation>>> getAllAmmo() {
         return AMMO_INDEX.entrySet();
     }
 
@@ -109,7 +111,7 @@ public class ClientGunPackLoader {
         return Optional.ofNullable(GUN_INDEX.get(registryName));
     }
 
-    public static Optional<ClientAmmoIndex> getAmmoIndex(ResourceLocation registryName) {
+    public static Optional<Pair<ClientAmmoIndex, BulletVariation>> getAmmoIndex(ResourceLocation registryName) {
         return Optional.ofNullable(AMMO_INDEX.get(registryName));
     }
 
@@ -314,9 +316,12 @@ public class ClientGunPackLoader {
             try (InputStream stream = zipFile.getInputStream(entry)) {
                 // 获取枪械的定义文件
                 AmmoIndexPOJO indexPOJO = GSON.fromJson(new InputStreamReader(stream, StandardCharsets.UTF_8), AmmoIndexPOJO.class);
-                ResourceLocation registryName = new ResourceLocation(namespace, id);
                 try {
-                    AMMO_INDEX.put(registryName, ClientAmmoIndex.getInstance(indexPOJO));
+                    for(var x : indexPOJO.getBulletVariations())
+                    {
+                        ResourceLocation registryName = new ResourceLocation(namespace, id+"_"+x.getSuffix());
+                        AMMO_INDEX.put(registryName, Pair.of(ClientAmmoIndex.getInstance(indexPOJO), x.getBulletVariation()));
+                    }
                 } catch (IllegalArgumentException exception) {
                     GunMod.LOGGER.warn("{} index file read fail!", path);
                     exception.printStackTrace();
@@ -332,7 +337,14 @@ public class ClientGunPackLoader {
                 try (InputStream stream = Files.newInputStream(file)) {
                     // 获取枪械的定义文件
                     AmmoIndexPOJO indexPOJO = GSON.fromJson(new InputStreamReader(stream, StandardCharsets.UTF_8), AmmoIndexPOJO.class);
-                    AMMO_INDEX.put(id, ClientAmmoIndex.getInstance(indexPOJO));
+
+                    for(var x : indexPOJO.getBulletVariations())
+                    {
+                        ResourceLocation registryName = new ResourceLocation(id.toString()+"_"+x.getSuffix());
+                        AMMO_INDEX.put(registryName, Pair.of(ClientAmmoIndex.getInstance(indexPOJO), x.getBulletVariation()));
+                    }
+
+                    //AMMO_INDEX.put(id, ClientAmmoIndex.getInstance(indexPOJO));
                 } catch (IOException exception) {
                     GunMod.LOGGER.warn(MARKER, "Failed to read index file: {}", file);
                     exception.printStackTrace();

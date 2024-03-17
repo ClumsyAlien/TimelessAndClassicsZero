@@ -33,7 +33,8 @@ public class AmmoItemRenderer extends BlockEntityWithoutLevelRenderer {
             poseStack.translate(0.5, 1.5, 0.5);
             poseStack.mulPose(Vector3f.ZN.rotationDegrees(180));
             TimelessAPI.getClientAmmoIndex(ammoId).ifPresentOrElse(ammoIndex -> {
-                VertexConsumer buffer = pBuffer.getBuffer(RenderType.entityTranslucent(ammoIndex.getSlotTextureLocation()));
+                VertexConsumer buffer = pBuffer.getBuffer(RenderType.entityTranslucent(
+                        ammoIndex.getLeft().getSlotTextureLocation(ammoIndex.getRight())));
                 SLOT_AMMO_MODEL.renderToBuffer(poseStack, buffer, pPackedLight, pPackedOverlay, 1.0F, 1.0F, 1.0F, 1.0F);
             }, () -> {
                 // 没有这个 ammoID，渲染个错误材质提醒别人

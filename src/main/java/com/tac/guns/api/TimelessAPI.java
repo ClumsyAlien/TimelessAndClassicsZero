@@ -10,9 +10,11 @@ import com.tac.guns.resource.CommonGunPackLoader;
 import com.tac.guns.resource.index.CommonAmmoIndex;
 import com.tac.guns.resource.index.CommonAttachmentIndex;
 import com.tac.guns.resource.index.CommonGunIndex;
+import com.tac.guns.resource.pojo.data.ammo.BulletVariation;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Map;
 import java.util.Optional;
@@ -30,7 +32,7 @@ public final class TimelessAPI {
     }
 
     @OnlyIn(Dist.CLIENT)
-    public static Optional<ClientAmmoIndex> getClientAmmoIndex(ResourceLocation ammoId) {
+    public static Optional<Pair<ClientAmmoIndex, BulletVariation>> getClientAmmoIndex(ResourceLocation ammoId) {
         return ClientGunPackLoader.getAmmoIndex(ammoId);
     }
 
@@ -40,7 +42,7 @@ public final class TimelessAPI {
     }
 
     @OnlyIn(Dist.CLIENT)
-    public static Set<Map.Entry<ResourceLocation, ClientAmmoIndex>> getAllClientAmmoIndex() {
+    public static Set<Map.Entry<ResourceLocation, Pair<ClientAmmoIndex, BulletVariation>>> getAllClientAmmoIndex() {
         return ClientGunPackLoader.getAllAmmo();
     }
 

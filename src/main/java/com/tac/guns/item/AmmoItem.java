@@ -9,6 +9,7 @@ import com.tac.guns.init.ModItems;
 import com.tac.guns.item.builder.AmmoItemBuilder;
 import com.tac.guns.item.nbt.AmmoItemDataAccessor;
 import com.tac.guns.resource.index.CommonAmmoIndex;
+import com.tac.guns.resource.pojo.data.ammo.BulletVariation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.core.NonNullList;
@@ -21,6 +22,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.IItemRenderProperties;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
 import java.util.Optional;
@@ -45,9 +47,10 @@ public class AmmoItem extends Item implements AmmoItemDataAccessor {
     @OnlyIn(Dist.CLIENT)
     public Component getName(@Nonnull ItemStack stack) {
         ResourceLocation ammoId = this.getAmmoId(stack);
-        Optional<ClientAmmoIndex> ammoIndex = TimelessAPI.getClientAmmoIndex(ammoId);
-        if (ammoIndex.isPresent()) {
-            return new TranslatableComponent(ammoIndex.get().getName());
+        Optional<Pair<ClientAmmoIndex, BulletVariation>> ammoIndex = TimelessAPI.getClientAmmoIndex(ammoId);
+        if (ammoIndex.isPresent() && ammoIndex.get().getRight() != null) {
+            var x = ammoIndex.get().getLeft().buildNameFromVariation(ammoIndex.get().getRight());
+            return new TranslatableComponent(x);
         }
         return super.getName(stack);
     }
@@ -56,7 +59,8 @@ public class AmmoItem extends Item implements AmmoItemDataAccessor {
     @OnlyIn(Dist.CLIENT)
     public void fillItemCategory(@Nonnull CreativeModeTab modeTab, @Nonnull NonNullList<ItemStack> stacks) {
         if (this.allowdedIn(modeTab)) {
-            TimelessAPI.getAllClientAmmoIndex().forEach(entry -> {
+            var x = TimelessAPI.getAllClientAmmoIndex();
+            x.forEach(entry -> {
                 ItemStack itemStack = AmmoItemBuilder.create().setId(entry.getKey()).build();
                 stacks.add(itemStack);
             });
