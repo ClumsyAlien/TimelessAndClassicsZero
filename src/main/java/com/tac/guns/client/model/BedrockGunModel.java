@@ -3,28 +3,29 @@ package com.tac.guns.client.model;
 import com.google.common.collect.Maps;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Matrix3f;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import com.tac.guns.api.attachment.AttachmentType;
 import com.tac.guns.api.item.IGun;
 import com.tac.guns.client.model.bedrock.BedrockPart;
-import com.tac.guns.client.model.bedrock.ModelRendererWrapper;
 import com.tac.guns.client.resource.pojo.model.BedrockModelPOJO;
 import com.tac.guns.client.resource.pojo.model.BedrockVersion;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ItemStack;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.EnumMap;
+import java.util.List;
 
 import static com.tac.guns.client.model.CommonComponents.*;
 
@@ -39,6 +40,8 @@ public class BedrockGunModel extends BedrockAnimatedModel {
     private static final String ATTACHMENT_POS_SUFFIX = "_pos";
     private static final String REFIT_VIEW_PREFIX = "refit_";
     private static final String REFIT_VIEW_SUFFIX = "_view";
+    protected final @Nonnull EnumMap<AttachmentType, List<BedrockPart>> refitAttachmentViewPath = Maps.newEnumMap(AttachmentType.class);
+    private final EnumMap<AttachmentType, ItemStack> currentAttachmentItem = Maps.newEnumMap(AttachmentType.class);
     // 第一人称机瞄摄像机定位组的路径
     protected @Nullable List<BedrockPart> ironSightPath;
     // 第一人称idle状态摄像机定位组的路径
@@ -53,14 +56,12 @@ public class BedrockGunModel extends BedrockAnimatedModel {
     protected @Nullable List<BedrockPart> scopePosPath;
     // 动画约束组的路径
     protected @Nullable List<BedrockPart> constraintPath;
-    protected final @Nonnull EnumMap<AttachmentType, List<BedrockPart>> refitAttachmentViewPath = Maps.newEnumMap(AttachmentType.class);
     private boolean renderHand = true;
     private ItemStack currentGunItem;
-    private final EnumMap<AttachmentType, ItemStack> currentAttachmentItem = Maps.newEnumMap(AttachmentType.class);
 
     public BedrockGunModel(BedrockModelPOJO pojo, BedrockVersion version) {
         super(pojo, version);
-        this.setFunctionalRenderer("lefthand_pos", bedrockPart -> (poseStack, transformType, consumer, light, overlay) -> {
+        this.setFunctionalRenderer("lefthand_pos", bedrockPart -> (poseStack, transformType, light, overlay) -> {
             if (transformType.firstPerson()) {
                 if (!renderHand) {
                     return;
@@ -68,8 +69,8 @@ public class BedrockGunModel extends BedrockAnimatedModel {
                 poseStack.mulPose(Vector3f.ZP.rotationDegrees(180f));
                 Matrix3f normal = poseStack.last().normal().copy();
                 Matrix4f pose = poseStack.last().pose().copy();
-                //和枪械模型共用缓冲区的都需要代理到渲染结束后渲染
-                this.delegateRender((poseStack1, transformType1, consumer1, light1, overlay1) -> {
+                //和枪械模型共用顶点缓冲的都需要代理到渲染结束后渲染
+                this.delegateRender((poseStack1, transformType1, light1, overlay1) -> {
                     PoseStack poseStack2 = new PoseStack();
                     poseStack2.last().normal().mul(normal);
                     poseStack2.last().pose().multiply(pose);
@@ -77,7 +78,7 @@ public class BedrockGunModel extends BedrockAnimatedModel {
                 });
             }
         });
-        this.setFunctionalRenderer("righthand_pos", bedrockPart -> (poseStack, transformType, consumer, light, overlay) -> {
+        this.setFunctionalRenderer("righthand_pos", bedrockPart -> (poseStack, transformType, light, overlay) -> {
             if (transformType.firstPerson()) {
                 if (!renderHand) {
                     return;
@@ -85,8 +86,8 @@ public class BedrockGunModel extends BedrockAnimatedModel {
                 poseStack.mulPose(Vector3f.ZP.rotationDegrees(180f));
                 Matrix3f normal = poseStack.last().normal().copy();
                 Matrix4f pose = poseStack.last().pose().copy();
-                //和枪械模型共用缓冲区的都需要代理到渲染结束后渲染
-                this.delegateRender((poseStack1, transformType1, consumer1, light1, overlay1) -> {
+                //和枪械模型共用顶点缓冲的都需要代理到渲染结束后渲染
+                this.delegateRender((poseStack1, transformType1, light1, overlay1) -> {
                     PoseStack poseStack2 = new PoseStack();
                     poseStack2.last().normal().mul(normal);
                     poseStack2.last().pose().multiply(pose);
@@ -170,7 +171,7 @@ public class BedrockGunModel extends BedrockAnimatedModel {
         scopePosPath = getPath(modelMap.get(AttachmentType.SCOPE.name().toLowerCase() + ATTACHMENT_POS_SUFFIX));
         constraintPath = getPath(modelMap.get(CONSTRAINT_NODE));
         // 缓存改装UI下各个配件的特写视角定位组
-        for(AttachmentType type : AttachmentType.values()){
+        for (AttachmentType type : AttachmentType.values()) {
             if (type == AttachmentType.NONE) {
                 refitAttachmentViewPath.put(type, getPath(modelMap.get(REFIT_VIEW_NODE)));
                 continue;
@@ -180,20 +181,20 @@ public class BedrockGunModel extends BedrockAnimatedModel {
         }
 
         // 准备各个配件的渲染
-        for(AttachmentType type : AttachmentType.values()){
+        for (AttachmentType type : AttachmentType.values()) {
             if (type == AttachmentType.NONE) {
                 continue;
             }
             String nodeName = type.name().toLowerCase() + ATTACHMENT_POS_SUFFIX;
             this.setFunctionalRenderer(nodeName, bedrockPart -> {
                 bedrockPart.visible = false;
-                return (poseStack, transformType, consumer, light, overlay) -> {
+                return (poseStack, transformType, light, overlay) -> {
                     ItemStack attachmentItem = currentAttachmentItem.get(type);
-                    if(attachmentItem != null && !attachmentItem.isEmpty()){
+                    if (attachmentItem != null && !attachmentItem.isEmpty()) {
                         Matrix3f normal = poseStack.last().normal().copy();
                         Matrix4f pose = poseStack.last().pose().copy();
-                        //和枪械模型共用缓冲区的都需要代理到渲染结束后渲染
-                        this.delegateRender((poseStack1, transformType1, consumer1, light1, overlay1) -> {
+                        //和枪械模型共用顶点缓冲的都需要代理到渲染结束后渲染
+                        this.delegateRender((poseStack1, transformType1, light1, overlay1) -> {
                             PoseStack poseStack2 = new PoseStack();
                             poseStack2.last().normal().mul(normal);
                             poseStack2.last().pose().multiply(pose);
@@ -239,24 +240,24 @@ public class BedrockGunModel extends BedrockAnimatedModel {
     }
 
     @Nullable
-    public List<BedrockPart> getConstraintPath(){
+    public List<BedrockPart> getConstraintPath() {
         return constraintPath;
     }
 
     @Nullable
-    public List<BedrockPart> getRefitAttachmentViewPath(AttachmentType type){
+    public List<BedrockPart> getRefitAttachmentViewPath(AttachmentType type) {
         return refitAttachmentViewPath.get(type);
     }
 
-    public void setRenderHand(boolean renderHand){
-        this.renderHand = renderHand;
-    }
-
-    public boolean getRenderHand(){
+    public boolean getRenderHand() {
         return renderHand;
     }
 
-    public void render(PoseStack matrixStack, ItemStack gunItem, ItemTransforms.TransformType transformType, VertexConsumer builder, int light, int overlay) {
+    public void setRenderHand(boolean renderHand) {
+        this.renderHand = renderHand;
+    }
+
+    public void render(PoseStack matrixStack, ItemStack gunItem, ItemTransforms.TransformType transformType, RenderType renderType, int light, int overlay) {
         IGun iGun = IGun.getIGunOrNull(gunItem);
         if (iGun == null) {
             return;
@@ -270,8 +271,7 @@ public class BedrockGunModel extends BedrockAnimatedModel {
             ItemStack attachmentItem = iGun.getAttachment(gunItem, type);
             currentAttachmentItem.put(type, attachmentItem);
         }
-
-        super.render(matrixStack, transformType, builder, light, overlay);
+        super.render(matrixStack, transformType, renderType, light, overlay);
     }
 
     private void renderFirstPersonArm(LocalPlayer player, HumanoidArm hand, PoseStack matrixStack, int combinedLight) {

@@ -11,19 +11,21 @@ import com.tac.guns.resource.pojo.data.attachment.AttachmentData;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.Objects;
 
 public class ClientAttachmentIndex {
+    private final Map<ResourceLocation, ClientAttachmentSkinIndex> skinIndexMap = Maps.newHashMap();
     private String name;
     private BedrockAttachmentModel attachmentModel;
     private ResourceLocation modelTexture;
     private ResourceLocation slotTexture;
     private AttachmentData data;
-    private final Map<ResourceLocation, ClientAttachmentSkinIndex> skinIndexMap = Maps.newHashMap();
+    private float fov = 70.0f;
+    private float @Nullable [] zoom;
 
     private ClientAttachmentIndex() {
     }
@@ -31,7 +33,7 @@ public class ClientAttachmentIndex {
     public static ClientAttachmentIndex getInstance(ResourceLocation registryName, AttachmentIndexPOJO indexPOJO) throws IllegalArgumentException {
         ClientAttachmentIndex index = new ClientAttachmentIndex();
         checkIndex(indexPOJO, index);
-        AttachmentDisplay display = checkDisplay(indexPOJO);
+        AttachmentDisplay display = checkDisplay(indexPOJO, index);
         checkData(indexPOJO, index);
         checkName(indexPOJO, index);
         checkSlotTexture(display, index);
@@ -46,8 +48,8 @@ public class ClientAttachmentIndex {
         }
     }
 
-    @NotNull
-    private static AttachmentDisplay checkDisplay(AttachmentIndexPOJO indexPOJO) {
+    @Nonnull
+    private static AttachmentDisplay checkDisplay(AttachmentIndexPOJO indexPOJO, ClientAttachmentIndex index) {
         ResourceLocation pojoDisplay = indexPOJO.getDisplay();
         if (pojoDisplay == null) {
             throw new IllegalArgumentException("index object missing display field");
@@ -56,6 +58,11 @@ public class ClientAttachmentIndex {
         if (display == null) {
             throw new IllegalArgumentException("there is no corresponding display file");
         }
+        if (display.getFov() <= 0) {
+            throw new IllegalArgumentException("fov must > 0");
+        }
+        index.fov = display.getFov();
+        index.zoom = display.getZoom();
         return display;
     }
 
@@ -101,10 +108,10 @@ public class ClientAttachmentIndex {
         index.modelTexture = textureLocation;
     }
 
-    private static void checkSkins(ResourceLocation registryName, ClientAttachmentIndex index){
+    private static void checkSkins(ResourceLocation registryName, ClientAttachmentIndex index) {
         Map<ResourceLocation, AttachmentSkin> skins = ClientAssetManager.INSTANCE.getAttachmentSkins(registryName);
-        if(skins != null){
-            for(Map.Entry<ResourceLocation, AttachmentSkin> entry : skins.entrySet()){
+        if (skins != null) {
+            for (Map.Entry<ResourceLocation, AttachmentSkin> entry : skins.entrySet()) {
                 ClientAttachmentSkinIndex skinIndex = ClientAttachmentSkinIndex.getInstance(entry.getValue());
                 index.skinIndexMap.put(entry.getKey(), skinIndex);
             }
@@ -127,9 +134,21 @@ public class ClientAttachmentIndex {
         return slotTexture;
     }
 
+    public float getFov() {
+        return fov;
+    }
+
+    public float @Nullable [] getZoom() {
+        return zoom;
+    }
+
+    public AttachmentData getData() {
+        return data;
+    }
+
     @Nullable
-    public ClientAttachmentSkinIndex getSkinIndex(@Nullable ResourceLocation skinName){
-        if(skinName == null){
+    public ClientAttachmentSkinIndex getSkinIndex(@Nullable ResourceLocation skinName) {
+        if (skinName == null) {
             return null;
         }
         return skinIndexMap.get(skinName);
