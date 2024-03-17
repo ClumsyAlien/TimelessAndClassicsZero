@@ -3,8 +3,7 @@
   "stack_size": 60,
   "bullet": [
     {
-      "display": "tac:magnum_r_display",
-      "damage_type": "standard"
+      "display": "tac:magnum_r_display"
     }
   ]
 }

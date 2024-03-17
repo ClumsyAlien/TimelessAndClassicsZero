@@ -3,8 +3,7 @@
   "stack_size": 60,
   "bullet": [
     {
-      "display": "tac:50bmg_display",
-      "damage_type": "standard"
+      "display": "tac:50bmg_display"
     }
   ]
 }
