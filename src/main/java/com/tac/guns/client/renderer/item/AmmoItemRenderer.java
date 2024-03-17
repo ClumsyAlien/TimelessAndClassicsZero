@@ -59,13 +59,13 @@ public class AmmoItemRenderer extends BlockEntityWithoutLevelRenderer {
             poseStack.scale(-1, -1, 1);
             TimelessAPI.getClientAmmoIndex(ammoId).ifPresentOrElse(ammoIndex -> {
                 if (transformType == FIXED) {
-                    BedrockAmmoModel ammoModel = ammoIndex.getAmmoModel();
+                    BedrockAmmoModel ammoModel = ammoIndex.getLeft().getAmmoModel(ammoIndex.getRight());
                     // 再移动 0.5 格到中心
                     poseStack.translate(0, -0.5, 0);
                     applyPositioningNodeTransform(ammoModel.getFixedOriginPath(), poseStack);
-                    ammoModel.render(poseStack, transformType, RenderType.entityTranslucent(ammoIndex.getModelTextureLocation()), pPackedLight, pPackedOverlay);
+                    ammoModel.render(poseStack, transformType, RenderType.entityTranslucent(ammoIndex.getLeft().getModelTextureLocation()), pPackedLight, pPackedOverlay);
                 } else {
-                    VertexConsumer buffer = pBuffer.getBuffer(RenderType.entityTranslucent(ammoIndex.getSlotTextureLocation()));
+                    VertexConsumer buffer = pBuffer.getBuffer(RenderType.entityTranslucent(ammoIndex.getLeft().getSlotTextureLocation(ammoIndex.getRight())));
                     SLOT_AMMO_MODEL.renderToBuffer(poseStack, buffer, pPackedLight, pPackedOverlay, 1.0F, 1.0F, 1.0F, 1.0F);
                 }
             }, () -> {
