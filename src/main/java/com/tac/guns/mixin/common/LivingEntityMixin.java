@@ -110,6 +110,11 @@ public abstract class LivingEntityMixin extends Entity implements IGunOperator {
     @Unique
     @Nullable
     private ItemStack tac$CurrentGunItem = null;
+    /**
+     * 用来记录子弹击退能力，负数表示使用原版击退
+     */
+    @Unique
+    private double tac$KnockbackStrength = -1;
 
     public LivingEntityMixin(EntityType<?> entityType, Level level) {
         super(entityType, level);
@@ -304,10 +309,10 @@ public abstract class LivingEntityMixin extends Entity implements IGunOperator {
         TimelessAPI.getCommonGunIndex(gunId).ifPresent(gunIndex -> {
             // TODO 获取 GunData 并根据其中的弹道参数创建 EntityBullet
             Level world = shooter.getLevel();
-            EntityBullet bullet = new EntityBullet(world, shooter);
+            EntityBullet bullet = new EntityBullet(world, shooter, gunIndex.getGunData().getAmmoId());
             InaccuracyType inaccuracyState = InaccuracyType.getInaccuracyType(shooter);
             float inaccuracy = gunIndex.getGunData().getInaccuracy(inaccuracyState);
-            bullet.shootFromRotation(bullet, pitch, yaw, 0.0F, 12.5f, inaccuracy);
+            bullet.shootFromRotation(bullet, pitch, yaw, 0.0F, 10f, inaccuracy);
             world.addFreshEntity(bullet);
             // 播放声音
             // TODO 配置文件决定衰减距离
@@ -517,5 +522,23 @@ public abstract class LivingEntityMixin extends Entity implements IGunOperator {
         entityData.define(DATA_RELOAD_STATE_ID, new ReloadState());
         entityData.define(DATA_AIMING_PROGRESS_ID, 0f);
         entityData.define(DATA_DRAW_COOL_DOWN_ID, -1L);
+    }
+
+    @Override
+    @Unique
+    public void setKnockbackStrength(double strength) {
+        this.tac$KnockbackStrength = strength;
+    }
+
+    @Override
+    @Unique
+    public void resetKnockbackStrength() {
+        this.tac$KnockbackStrength = -1;
+    }
+
+    @Override
+    @Unique
+    public double getKnockbackStrength() {
+        return this.tac$KnockbackStrength;
     }
 }

@@ -12,10 +12,14 @@ import com.tac.guns.GunMod;
 import com.tac.guns.api.TimelessAPI;
 import com.tac.guns.client.gui.components.ResultButton;
 import com.tac.guns.client.gui.components.TypeButton;
+import com.tac.guns.client.resource.ClientAssetManager;
+import com.tac.guns.client.resource.pojo.CustomTabPOJO;
 import com.tac.guns.crafting.GunSmithTableIngredient;
 import com.tac.guns.crafting.GunSmithTableRecipe;
 import com.tac.guns.crafting.GunSmithTableResult;
 import com.tac.guns.inventory.GunSmithTableMenu;
+import com.tac.guns.item.builder.AmmoItemBuilder;
+import com.tac.guns.item.builder.AttachmentItemBuilder;
 import com.tac.guns.network.NetworkHandler;
 import com.tac.guns.network.message.ClientMessageCraft;
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
@@ -110,6 +114,13 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
         }
     }
 
+    public void updateIngredientCount() {
+        if (this.selectedRecipe != null) {
+            this.getPlayerIngredientCount(selectedRecipe);
+        }
+        this.init();
+    }
+
     @Override
     protected void init() {
         super.init();
@@ -124,7 +135,21 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
 
     private void addCraftButton() {
         this.addRenderableWidget(new ImageButton(leftPos + 289, topPos + 162, 48, 18, 138, 164, 18, TEXTURE, b -> {
-            if (this.selectedRecipe != null) {
+            if (this.selectedRecipe != null && playerIngredientCount != null) {
+                // 检查是否能合成，不能就不发包
+                List<GunSmithTableIngredient> inputs = selectedRecipe.getInputs();
+                int size = inputs.size();
+                for (int i = 0; i < size; i++) {
+                    if (i >= playerIngredientCount.size()) {
+                        return;
+                    }
+                    int hasCount = playerIngredientCount.get(i);
+                    int needCount = inputs.get(i).getCount();
+                    // 拥有数量小于需求数量，不发包
+                    if (hasCount < needCount) {
+                        return;
+                    }
+                }
                 NetworkHandler.CHANNEL.sendToServer(new ClientMessageCraft(this.selectedRecipe.getId(), this.menu.containerId));
             }
         }));
@@ -165,22 +190,27 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
             if (recipeIdGroups.isEmpty()) {
                 continue;
             }
-            ResourceLocation recipeId = recipeIdGroups.get(0);
-            TimelessAPI.getRecipe(recipeId).ifPresent(recipe -> {
-                GunSmithTableResult recipeResult = recipe.getResult();
-                TypeButton typeButton = new TypeButton(xOffset, topPos + 2, recipeResult.getResult(), b -> {
-                    this.selectedType = type;
-                    this.selectedRecipeList = recipes.get(type);
-                    this.indexPage = 0;
-                    this.selectedRecipe = getSelectedRecipe(this.selectedRecipeList.get(0));
-                    this.getPlayerIngredientCount(this.selectedRecipe);
-                    this.init();
-                });
-                if (this.selectedType.equals(type)) {
-                    typeButton.setSelected(true);
-                }
-                this.addRenderableWidget(typeButton);
+            CustomTabPOJO tabPOJO = ClientAssetManager.INSTANCE.getAllCustomTabs().get(type);
+            ItemStack icon = ItemStack.EMPTY;
+            if (tabPOJO != null) {
+                icon = tabPOJO.getIconStack();
+            } else if (GunSmithTableResult.AMMO.equals(type)) {
+                icon = AmmoItemBuilder.create().build();
+            } else if (GunSmithTableResult.ATTACHMENT.equals(type)) {
+                icon = AttachmentItemBuilder.create().build();
+            }
+            TypeButton typeButton = new TypeButton(xOffset, topPos + 2, icon, b -> {
+                this.selectedType = type;
+                this.selectedRecipeList = recipes.get(type);
+                this.indexPage = 0;
+                this.selectedRecipe = getSelectedRecipe(this.selectedRecipeList.get(0));
+                this.getPlayerIngredientCount(this.selectedRecipe);
+                this.init();
             });
+            if (this.selectedType.equals(type)) {
+                typeButton.setSelected(true);
+            }
+            this.addRenderableWidget(typeButton);
         }
     }
 
@@ -294,6 +324,7 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
         int startY = topPos + 16;
         int width = 128;
         int height = 99;
+        float rotPitch = 15;
 
         Window window = Minecraft.getInstance().getWindow();
         double windowGuiScale = window.getGuiScale();
@@ -315,6 +346,7 @@ public class GunSmithTableScreen extends AbstractContainerScreen<GunSmithTableMe
         posestack.scale(1.0F, -1.0F, 1.0F);
         posestack.scale(scale, scale, scale);
         float rot = (System.currentTimeMillis() % (int) (rotationPeriod * 1000)) * (360f / (rotationPeriod * 1000));
+        posestack.mulPose(Vector3f.XP.rotationDegrees(rotPitch));
         posestack.mulPose(Vector3f.YP.rotationDegrees(rot));
         RenderSystem.applyModelViewMatrix();
         PoseStack tmpPose = new PoseStack();

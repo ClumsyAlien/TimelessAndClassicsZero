@@ -13,6 +13,8 @@ public enum AttachmentType {
     GRIP,
     @SerializedName("laser")
     LASER,
-    /** 用来表示物品不是配件的情况 */
+    /**
+     * 用来表示物品不是配件的情况。
+     */
     NONE
 }

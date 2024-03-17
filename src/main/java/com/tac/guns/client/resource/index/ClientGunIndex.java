@@ -29,6 +29,7 @@ import java.util.Objects;
 @OnlyIn(Dist.CLIENT)
 public class ClientGunIndex {
     private String name;
+    private String thirdPersonAnimation = "empty";
     private BedrockGunModel gunModel;
     private GunAnimationStateMachine animationStateMachine;
     private Map<String, ResourceLocation> sounds;
@@ -38,6 +39,7 @@ public class ClientGunIndex {
     private ResourceLocation modelTexture;
     private ResourceLocation slotTexture;
     private ResourceLocation hudTexture;
+    private String type;
 
     private ClientGunIndex() {
     }
@@ -62,6 +64,10 @@ public class ClientGunIndex {
         if (gunIndexPOJO == null) {
             throw new IllegalArgumentException("index object file is empty");
         }
+        if (StringUtils.isBlank(gunIndexPOJO.getType())) {
+            throw new IllegalArgumentException("index object missing type field");
+        }
+        index.type = gunIndexPOJO.getType();
     }
 
     private static void checkName(GunIndexPOJO gunIndexPOJO, ClientGunIndex index) {
@@ -141,6 +147,9 @@ public class ClientGunIndex {
         AnimationController controller = Animations.createControllerFromGltf(animations, index.gunModel);
         // 将动画控制器包装起来
         index.animationStateMachine = new GunAnimationStateMachine(controller);
+        if (StringUtils.isNoneBlank(display.getThirdPersonAnimation())) {
+            index.thirdPersonAnimation = display.getThirdPersonAnimation();
+        }
     }
 
     private static void checkSounds(GunDisplay display, ClientGunIndex index) {
@@ -185,6 +194,10 @@ public class ClientGunIndex {
         index.hudTexture = Objects.requireNonNullElseGet(display.getHudTextureLocation(), MissingTextureAtlasSprite::getLocation);
     }
 
+    public String getType() {
+        return type;
+    }
+
     public String getName() {
         return name;
     }
@@ -223,5 +236,9 @@ public class ClientGunIndex {
 
     public AnimationInfluenceCoefficient getAnimationInfluenceCoefficient() {
         return animationInfluenceCoefficient;
+    }
+
+    public String getThirdPersonAnimation() {
+        return thirdPersonAnimation;
     }
 }

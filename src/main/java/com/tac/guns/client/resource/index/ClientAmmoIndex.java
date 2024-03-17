@@ -5,6 +5,7 @@ import com.tac.guns.api.TimelessAPI;
 import com.tac.guns.client.model.BedrockAmmoModel;
 import com.tac.guns.client.resource.ClientAssetManager;
 import com.tac.guns.client.resource.pojo.display.ammo.AmmoDisplay;
+import com.tac.guns.client.resource.pojo.display.ammo.AmmoEntityDisplay;
 import com.tac.guns.client.resource.pojo.model.BedrockModelPOJO;
 import com.tac.guns.client.resource.pojo.model.BedrockVersion;
 import com.tac.guns.resource.pojo.AmmoIndexPOJO;
@@ -16,12 +17,22 @@ import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.jetbrains.annotations.NotNull;
+
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.Nullable;
+
 
 import java.util.*;
 
 public class ClientAmmoIndex {
     private String name;
+
+    private BedrockAmmoModel ammoModel;
+    private ResourceLocation modelTextureLocation;
+    private ResourceLocation slotTextureLocation;
+    private @Nullable BedrockAmmoModel ammoEntityModel;
+    private @Nullable ResourceLocation ammoEntityTextureLocation;
+
     private int stackSize;
 
     // Map of <BulletType, ItemId.name>
@@ -45,6 +56,7 @@ public class ClientAmmoIndex {
         for(var displayPair : displays) {
             checkTextureAndModel(displayPair.getRight(), index, displayPair.getLeft());
             checkSlotTexture(displayPair.getRight(), index, displayPair.getLeft());
+            checkAmmoEntity(displayPair.getRight(), index);
         }
         checkStackSize(clientPojo, index);
         return index;
@@ -133,15 +145,14 @@ public class ClientAmmoIndex {
         if (texture == null) {
             throw new IllegalArgumentException("display object missing textures field");
         }
-        // 创建默认的 RenderType
-        RenderType renderType = RenderType.itemEntityTranslucentCull(texture);
+        index.modelTextureLocation = texture;
         // 先判断是不是 1.10.0 版本基岩版模型文件
         if (modelPOJO.getFormatVersion().equals(BedrockVersion.LEGACY.getVersion()) && modelPOJO.getGeometryModelLegacy() != null) {
-            index.modelTexturePairs.put(variation, Pair.of(new BedrockAmmoModel(modelPOJO, BedrockVersion.LEGACY, renderType), null));
+            index.modelTexturePairs.put(variation, Pair.of(new BedrockAmmoModel(modelPOJO, BedrockVersion.LEGACY), null));
         }
         // 判定是不是 1.12.0 版本基岩版模型文件
         if (modelPOJO.getFormatVersion().equals(BedrockVersion.NEW.getVersion()) && modelPOJO.getGeometryModelNew() != null) {
-            index.modelTexturePairs.put(variation, Pair.of(new BedrockAmmoModel(modelPOJO, BedrockVersion.NEW, renderType), null));
+            index.modelTexturePairs.put(variation, Pair.of(new BedrockAmmoModel(modelPOJO, BedrockVersion.NEW), null));
         }
         if (index.modelTexturePairs.get(variation) == null) {
             throw new IllegalArgumentException("there is no model data in the model file");
@@ -155,6 +166,26 @@ public class ClientAmmoIndex {
         pair.setLeft(index.modelTexturePairs.get(variation).getLeft());
         pair.setValue(Objects.requireNonNullElseGet(display.getSlotTextureLocation(), MissingTextureAtlasSprite::getLocation));
         index.modelTexturePairs.put(variation, pair);
+    }
+
+    private static void checkAmmoEntity(AmmoDisplay display, ClientAmmoIndex index) {
+        AmmoEntityDisplay ammoEntity = display.getAmmoEntity();
+        if (ammoEntity != null && ammoEntity.getModelLocation() != null && ammoEntity.getModelTexture() != null) {
+            index.ammoEntityTextureLocation = ammoEntity.getModelTexture();
+            ResourceLocation modelLocation = ammoEntity.getModelLocation();
+            BedrockModelPOJO modelPOJO = ClientAssetManager.INSTANCE.getModels(modelLocation);
+            if (modelPOJO == null) {
+                return;
+            }
+            // 先判断是不是 1.10.0 版本基岩版模型文件
+            if (modelPOJO.getFormatVersion().equals(BedrockVersion.LEGACY.getVersion()) && modelPOJO.getGeometryModelLegacy() != null) {
+                index.ammoEntityModel = new BedrockAmmoModel(modelPOJO, BedrockVersion.LEGACY);
+            }
+            // 判定是不是 1.12.0 版本基岩版模型文件
+            if (modelPOJO.getFormatVersion().equals(BedrockVersion.NEW.getVersion()) && modelPOJO.getGeometryModelNew() != null) {
+                index.ammoEntityModel = new BedrockAmmoModel(modelPOJO, BedrockVersion.NEW);
+            }
+        }
     }
 
     private static void checkStackSize(AmmoIndexPOJO clientPojo, ClientAmmoIndex index) {
@@ -190,5 +221,19 @@ public class ClientAmmoIndex {
     }
     public int getStackSize() {
         return stackSize;
+    }
+
+    @Nullable
+    public BedrockAmmoModel getAmmoEntityModel() {
+        return ammoEntityModel;
+    }
+
+    @Nullable
+    public ResourceLocation getAmmoEntityTextureLocation() {
+        return ammoEntityTextureLocation;
+    }
+
+    public ResourceLocation getModelTextureLocation() {
+        return modelTextureLocation;
     }
 }
